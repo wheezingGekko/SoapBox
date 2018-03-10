@@ -63,7 +63,9 @@ $(function () {
         return false;
     });
 
-    socket.on('throw cookies', function(cooks))
+    socket.on('throw cookies', function(nom){
+        document.cookie = nom;
+    });
 
     socket.on('chat message', function(user, msg, time){
         addMessage(user, msg, time, '');

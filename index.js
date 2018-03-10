@@ -121,6 +121,13 @@ function createName(){
     return newName;
 }
 
+function createCookie(chips){
+    let d = new Date();
+    d.setTime(d.getTime() + (2 * 24 * 60 * 60 * 1000));
+    let expires = "expires="+d.toUTCString();
+    return "nick=" + chips + ";" + expires + ";path=/";
+}
+
 var userList = {};
 var messageList = [];
 
@@ -148,19 +155,14 @@ io.on('connection', function(socket){
     let ID = "";
 
     if (socket.request.cookie === undefined){
-        let ID = createName();
+        ID = createName();
         userList[ID] = new User(socket.id, ID);
-        socket.request.cookie = {'nick':ID};
+        let cooks = createCookie(ID);
+        socket.emit('throw cookies', createCookie(cooks));
     }
     else{
         ID = socket.request.cookie.nick;
     }
-
-    socket.emit('throw cookies', ID);
-
-    if (!(ID in userList))
-        userList[ID] = new User(createName());
-
 
     io.emit('user connected', userList[ID].name, Object.values(userList), messageList);
 
@@ -184,6 +186,7 @@ io.on('connection', function(socket){
             else {
                 //io.emit('chat messsage', userList[ID].name + " has changed their name to " + param);
                 io.emit('change nick', userList[ID].name, param);
+                socket.emit('throw cookies', createCookie(param));
                 userList[ID].name = param;
             }
         }

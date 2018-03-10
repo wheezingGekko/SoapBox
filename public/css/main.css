@@ -1,5 +1,4 @@
 * {
-    color: #fcfcfc;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -178,6 +177,7 @@ body {
     margin-bottom: 2%;
     padding: 5px 10px;
     overflow-wrap: normal;
+    color: #2c8098;
 
     /*
     display: flex;
@@ -192,12 +192,19 @@ body {
 }
 
 .normalMessage {
+    /*
     -webkit-border-radius: 30px;
     -moz-border-radius: 30px;
     border-radius: 30px;
+    */
 
+    color: #2c8098;
+
+    /*
+    color: #fcfcfc;
     border-color: #2c8098;
     border-width: 4px;
+    */
 
     max-width: 30%;
 
