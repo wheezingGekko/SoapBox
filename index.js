@@ -188,7 +188,8 @@ io.on('connection', function(socket){
 
             else {
                 //io.emit('chat messsage', userList[ID].name + " has changed their name to " + param);
-                io.emit('change nick', userList[ID].name, param);
+                socket.broadcast.emit('change nick', userList[ID].name, param);
+                socket.emit('self change nick', userList[ID].name, param);
                 socket.emit('throw cookies', createCookie(param));
                 userList[ID].name = param;
             }
