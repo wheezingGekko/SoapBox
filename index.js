@@ -1,67 +1,92 @@
-const CHANGE_NICK = "/nick ";
-const CHANGE_COLOR = "/nickcolor ";
+/** IMPORTED PACKAGES **/
 
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var cookies = require('cookie-parser');
+var cookieParser = require('socket.io-cookie-parser');
 var port = process.env.PORT || 3000;
 var path = require('path');
 
-app.use(express.static(path.join(__dirname, '/public')));
-app.use(cookies());
 
+/** SERVER-RELATED **/
+
+app.use(express.static(path.join(__dirname, '/public')));
+
+io.use(cookieParser());
+
+/*
+app.get('/list', function(req, res){
+    res.send(req.cookies);
+});
+*/
+
+app.get('/', function(req, res){
+    res.sendFile(__dirname + '/index.html');
+});
+
+
+/** VAR **/
+
+const CHANGE_NICK = "/nick ";
+const CHANGE_COLOR = "/nickcolor ";
+
+const MONTH_NUM_TO_NAME = {
+   0: "January",
+   1: "February",
+   2: "March",
+   3: "April",
+   4: "May",
+   5: "June",
+   6: "July",
+   7: "August",
+   8: "September",
+   9: "October",
+   10: "November",
+   11: "December"
+};
+
+const entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;'
+};
+
+
+/**
+ * author: https://stackoverflow.com/questions/24816/escaping-html-strings-with-jquery
+ *
+ * Provides one measure of ensuring that the string passed within is not hazardous
+ *
+ * @param dirtyString - possibly dangerous string
+ * @returns string - cleaned
+ */
+function sanitize(dirtyString) {
+    return String(dirtyString).replace(/[&<>"'`=\/]/g, function (s) {
+        return entityMap[s];
+    });
+}
+
+/**
+ * Creates a string of the time that a message has been posted
+ *
+ * @returns string
+ */
 function makeTimeStamp(){
     let time = "";
 
     let msTime = new Date();
     let tYear = msTime.getFullYear();
-    let tMonth = msTime.getMonth();
+    let tMonth = MONTH_NUM_TO_NAME[msTime.getMonth()];
     let tDate = msTime.getDate();
     //let tDay = msTime.getDay();
     let tHour = msTime.getHours();
     let tMin = msTime.getMinutes();
-
-    let mon = "";
-    switch(tMonth){
-        case 0:
-            mon = "January";
-            break;
-        case 1:
-            mon = "February";
-            break;
-        case 2:
-            mon = "March";
-            break;
-        case 3:
-            mon = "April";
-            break;
-        case 4:
-            mon = "May";
-            break;
-        case 5:
-            mon = "June";
-            break;
-        case 6:
-            mon = "July";
-            break;
-        case 7:
-            mon = "August";
-            break;
-        case 8:
-            mon = "September";
-            break;
-        case 9:
-            mon = "October";
-            break;
-        case 10:
-            mon = "November";
-            break;
-        case 11:
-            mon = "December";
-            break;
-    }
 
     // hour is not military
     if (tHour > 11) {
@@ -77,11 +102,15 @@ function makeTimeStamp(){
         tMin = "0" + tMin;
 
     // displays -> hr:min AM/PM
-    time = mon + " " + tDate + " " + tYear + ", " + tHour + ":" + tMin + time;
-
-    return time;
+    return (tMonth + " " + tDate + " " + tYear + ", " + tHour + ":" + tMin + time);
 }
 
+/**
+ * Randomly composes a default name for a user
+ *  DUDE + ###
+ *
+ * @returns {string}
+ */
 function createName(){
     let newName = "";
 
@@ -92,91 +121,91 @@ function createName(){
     return newName;
 }
 
+var userList = {};
+var messageList = [];
 
-/*
-function addUserToList(n) {
-    var listObj = document.createElement("LI");
-    var circle = document.getElementsByClassName("circle");
-    var textObj = document.createTextNode(n);
-
-    var userListObj = document.getElementById("user_list")
-
-    listObj.appendChild(circle);
-    listObj.appendChild(textObj);
-    document.
-
-    // Adds an element to the document
-    var p = document.getElementById(parentId);
-    var newElement = document.createElement(elementTag);
-    newElement.setAttribute('id', elementId);
-    newElement.innerHTML = html;
-    p.appendChild(newElement);
-}
-*/
-function removeUserFromList(){
-
-}
-
-
-
-var userList = [];
-
-var User = class User {
-
-    constructor(sock, name){
-        this.sock = sock;
+class User {
+    constructor(socketID, name){
+        this.socketID = socketID;
         this.name = name;
         this.color = "black";
     }
-};
 
-app.get('/', function(req, res){
-    res.sendFile(__dirname + '/index.html');
-});
+    hasSameName(anotherName){
+        return this.name === anotherName;
+    }
+}
+
+function userExists(name){
+    for (let i = 0; i < Object.values(userList).length; i++){
+        if (Object.values(userList)[i].hasSameName(name)) return true;
+    }
+    return false;
+}
 
 io.on('connection', function(socket){
 
-    if (!(socket in userList))
-        userList['socket'] = new User(socket, createName());
+    let ID = "";
 
-    io.emit('user connected', userList.socket.name);
+    if (socket.request.cookie === undefined){
+        let ID = createName();
+        userList[ID] = new User(socket.id, ID);
+        socket.request.cookie = {'nick':ID};
+    }
+    else{
+        ID = socket.request.cookie.nick;
+    }
 
-    io.emit('chat message', userList.socket.name + " has connected");
+    socket.emit('throw cookies', ID);
+
+    if (!(ID in userList))
+        userList[ID] = new User(createName());
+
+
+    io.emit('user connected', userList[ID].name, Object.values(userList), messageList);
 
     socket.on('chat message', function(msg){
-        let param = msg.split(" ", 2)[1];
 
-        // change the color of the message if it starts with "/nickcolor "
+        let param = sanitize(msg.split(" ")[1]);
+
+        /** Change color of the nickname **/
         if (msg.startsWith(CHANGE_COLOR)){
-
-            userList.socket.color = param;
-            io.emit('change color', param);
-
-            console.log("Change color to: " + userList.socket.color);
+            userList[ID].color = param;
+            io.emit('change color', userList[ID].name, userList[ID].color);
         }
 
         // change the name of the user if it starts with "/nick "
         else if (msg.startsWith(CHANGE_NICK)){
-            userList.socket.name = param;
-            console.log(param);
+
+            if (userExists(param))
+                socket.emit('name taken', makeTimeStamp());
+                //socket.emit('chat message', "nickname, " + param + ", is already taken ):");
+
+            else {
+                //io.emit('chat messsage', userList[ID].name + " has changed their name to " + param);
+                io.emit('change nick', userList[ID].name, param);
+                userList[ID].name = param;
+            }
         }
 
         // otherwise, just have it as a regular message
         else {
-            io.emit('chat message', userList.socket.name + ": " + msg + " at " + makeTimeStamp(), userList.socket.color);
-            console.log(makeTimeStamp());
+            let time = makeTimeStamp();
+            socket.emit('own chat message', userList[ID], sanitize(msg), time);
+            socket.broadcast.emit('chat message', userList[ID], sanitize(msg), time);
+
+            if (messageList.length === 200)
+                messageList.shift();
+
+            messageList.push({'user':userList[ID],'msg':msg,'time':time});
         }
 
     });
 
-    /*
-    socket.on('incorrect parameter', function(){
-      socket.emit('chat message', "")
-    })
-    */
-
     socket.on('disconnect', function(){
-        io.emit('chat message', userList.socket.name + " has disconnected");
+        let disconnectedUser = userList[ID].name;
+        delete userList[ID];
+        io.emit('user disconnected', disconnectedUser, Object.values(userList));
     })
 });
 
