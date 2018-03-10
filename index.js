@@ -121,6 +121,14 @@ function createName(){
     return newName;
 }
 
+/**
+ *  creates the data of the cookie to be given to the client when requested
+ *  takes a nickname, which is meant to be remembered by the chat once
+ *  a user disconnects and reconnects
+ *
+ * @param chips
+ * @returns {string}
+ */
 function createCookie(chips){
     let d = new Date();
     d.setTime(d.getTime() + (2 * 24 * 60 * 60 * 1000));
@@ -134,24 +142,41 @@ function createCookie(chips){
 var userList = {};
 var messageList = [];
 
+/**
+ * contains information about a particular user for packaging reasons
+ * the socketID is not necessarily useful in this case
+ */
 class User {
     constructor(socketID, name){
         this.socketID = socketID;
         this.name = name;
-        this.color = "black";
+        this.color = "#bdd8e8";
     }
 
+    /**
+     * checks if another user has the same name as this instance
+     *
+     * @param anotherName
+     * @returns {boolean}
+     */
     hasSameName(anotherName){
         return this.name === anotherName;
     }
 }
 
+/**
+ * checks if a nickname already exists amongst the list of users
+ *
+ * @param name
+ * @returns {boolean}
+ */
 function userExists(name){
     for (let i = 0; i < Object.values(userList).length; i++){
         if (Object.values(userList)[i].hasSameName(name)) return true;
     }
     return false;
 }
+
 
 io.on('connection', function(socket){
 
@@ -166,8 +191,8 @@ io.on('connection', function(socket){
         ID = socket.request.cookie.nick;
     }
 
-    io.emit('user connected', userList[ID].name, Object.values(userList), messageList);
-    socket.emit('self connected', ID);
+    socket.broadcast.emit('user connected', userList[ID].name, Object.values(userList));
+    socket.emit('self connected', ID, Object.values(userList), messageList);
 
     socket.on('chat message', function(msg){
 
@@ -175,19 +200,18 @@ io.on('connection', function(socket){
 
         /** Change color of the nickname **/
         if (msg.startsWith(CHANGE_COLOR)){
-            userList[ID].color = param;
-            io.emit('change color', userList[ID].name, userList[ID].color);
+            io.emit('change color', userList[ID].name, param);
         }
 
         // change the name of the user if it starts with "/nick "
         else if (msg.startsWith(CHANGE_NICK)){
 
-            if (userExists(param))
-                socket.emit('name taken', makeTimeStamp());
-                //socket.emit('chat message', "nickname, " + param + ", is already taken ):");
-
+            if (userExists(param)) {
+                let yMsg = "Someone already has that name, sorry!";
+                socket.emit('yammy message', yMsg);
+            }
             else {
-                //io.emit('chat messsage', userList[ID].name + " has changed their name to " + param);
+                io.emit('nick change alert', userList[ID].name + " has changed their name to " + param + "!");
                 socket.broadcast.emit('change nick', userList[ID].name, param);
                 socket.emit('self change nick', userList[ID].name, param);
                 socket.emit('throw cookies', createCookie(param));
@@ -207,6 +231,10 @@ io.on('connection', function(socket){
             messageList.push({'user':userList[ID],'msg':sanitize(msg),'time':time});
         }
 
+    });
+
+    socket.on('successful color', function(name, color){
+        userList[name].color = color;
     });
 
     socket.on('disconnect', function(){

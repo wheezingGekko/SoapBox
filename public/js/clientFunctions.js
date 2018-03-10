@@ -1,5 +1,28 @@
 const OTHER_USER = "otherUser";
 
+/**
+ *  author: https://stackoverflow.com/questions/6386090/validating-css-color-names
+ *
+ *  checks if the color exists
+ *
+ * @param stringToTest
+ * @returns {boolean}
+ */
+function validTextColour(stringToTest) {
+    //Alter the following conditions according to your need.
+    if (stringToTest === "") { return false; }
+    if (stringToTest === "inherit") { return false; }
+    if (stringToTest === "transparent") { return false; }
+
+    var image = document.createElement("img");
+    image.style.color = "rgb(0, 0, 0)";
+    image.style.color = stringToTest;
+    if (image.style.color !== "rgb(0, 0, 0)") { return true; }
+    image.style.color = "rgb(255, 255, 255)";
+    image.style.color = stringToTest;
+    return image.style.color !== "rgb(255, 255, 255)";
+}
+
 function addUser(user){
     $('.users ul').append(
         (($('<li></li>')
@@ -89,17 +112,18 @@ $(function () {
         addMessage(user, msg, time, 'self');
     });
 
-    socket.on('user connected', function(userName, users, messages){
+    socket.on('user connected', function(userName, users){
         flushUserList(users);
-
-        if (messages.length > 0)
-            populateMessages(messages);
-
         createAlertMessage(userName + " has connected!");
     });
 
-    socket.on('self connected', function(userName){
+    socket.on('self connected', function(userName, users, messages){
+        flushUserList(users);
+
        $('span.username').text(userName);
+        if (messages.length > 0)
+            populateMessages(messages);
+       createAlertMessage("You have connected!");
     });
 
     socket.on('user disconnected', function(userName, users){
@@ -109,7 +133,15 @@ $(function () {
 
 
     socket.on('change color', function(name, nickColor){
-        $('div.username:contains("' + name + '")').css("border-color",nickColor);
+        if (validTextColour(nickColor)){
+            $('div.username:contains("' + name + '")').css("border-color",nickColor);
+            socket.emit('successful color', name, nickColor);
+        }
+        else{
+            let msg = "We can't use that color, sorry!";
+
+            addMessage({'name': 'YAMMY-BOT', 'color':'#bdd8e8'}, msg, "", OTHER_USER);
+        }
     });
 
     socket.on('change nick', function(oldName, newName){
@@ -121,7 +153,11 @@ $(function () {
         $('span.username').text(newName);
     });
 
-    socket.on('name taken', function(time){
-        addMessage({'user': 'Yammy', 'color':'"blue"'}, "That name is already taken, I'm sorry! D: ~Yammy", time);
+    socket.on('nick change alert', function(msg){
+        createAlertMessage(msg);
+    });
+
+    socket.on('yammy message', function(msg){
+        addMessage({'name': 'YAMMY-BOT', 'color':'#bdd8e8'}, msg, "", OTHER_USER);
     })
 });
