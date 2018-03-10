@@ -165,6 +165,7 @@ io.on('connection', function(socket){
     }
 
     io.emit('user connected', userList[ID].name, Object.values(userList), messageList);
+    socket.emit('self connected', ID);
 
     socket.on('chat message', function(msg){
 

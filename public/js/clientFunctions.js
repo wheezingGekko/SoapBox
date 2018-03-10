@@ -84,6 +84,10 @@ $(function () {
         createAlertMessage(userName + " has connected!");
     });
 
+    socket.on('self connected', function(userName){
+       $('span.username').text(userName);
+    });
+
     socket.on('user disconnected', function(userName, users){
         flushUserList(users);
         createAlertMessage(userName + " has disconnected!");
@@ -96,6 +100,7 @@ $(function () {
 
     socket.on('change nick', function(oldName, newName){
         $('div.username:contains("' + oldName + '")').text(newName);
+        $('span.username').text(newName);
     });
 
     socket.on('name taken', function(time){
