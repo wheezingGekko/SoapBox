@@ -17,3 +17,4 @@ This is done with `/nick <name>` and `/nickcolor <color>` respectively.
 - Scrolling doesn't work on Firefox
 - No real persistence
 - Escape characters are not cute
+- Chatbox boxes will not shrink until you create more boxes
