@@ -125,6 +125,9 @@ function createCookie(chips){
     let d = new Date();
     d.setTime(d.getTime() + (2 * 24 * 60 * 60 * 1000));
     let expires = "expires="+d.toUTCString();
+
+    console.log("nick=" + chips + ";" + expires + ";path=/");
+
     return "nick=" + chips + ";" + expires + ";path=/";
 }
 
@@ -157,8 +160,7 @@ io.on('connection', function(socket){
     if (socket.request.cookie === undefined){
         ID = createName();
         userList[ID] = new User(socket.id, ID);
-        let cooks = createCookie(ID);
-        socket.emit('throw cookies', createCookie(cooks));
+        socket.emit('throw cookies', createCookie(ID));
     }
     else{
         ID = socket.request.cookie.nick;
