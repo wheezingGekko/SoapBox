@@ -26,7 +26,9 @@ function addMessage(user, msg, time, owner){
         messageClass = 'otherDudeUsername';
     }
 
-    $('#messages').prepend((
+    let messageBox = $('#messages');
+
+    messageBox.prepend((
         (($('<li>').append($('<div>')
             .text(name)
             .addClass(messageClass)
@@ -35,7 +37,8 @@ function addMessage(user, msg, time, owner){
             .append($('<div>').text(time).addClass('timestamp'))
     ).addClass('normalMessage'));
 
-    window.scrollTo(0, document.body.scrollHeight);
+
+    messageBox.scrollTop(messageBox[0].scrollHeight);
 }
 
 
@@ -52,7 +55,7 @@ function createAlertMessage(message){
             .addClass('eventMessage')
     )));
 
-    window.scrollTo(0, document.body.scrollHeight);
+    messageBox.scrollTop(messageBox[0].scrollHeight);
 }
 
 $(function () {
