@@ -204,7 +204,7 @@ io.on('connection', function(socket){
             if (messageList.length === 200)
                 messageList.shift();
 
-            messageList.push({'user':userList[ID],'msg':msg,'time':time});
+            messageList.push({'user':userList[ID],'msg':sanitize(msg),'time':time});
         }
 
     });
