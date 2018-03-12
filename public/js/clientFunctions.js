@@ -1,3 +1,4 @@
+const SELF = 'self';
 const OTHER_USER = "otherUser";
 const YAMMY = "yammy";
 
@@ -58,10 +59,10 @@ function flushUserList(users){
  * @param owner - whether or not it was the user themselves or another person
  */
 function addMessage(user, msg, time, owner){
-    let name = user['name'];
+    let name = user.name;
     let messageClass = "";
 
-    if (owner === 'self') {
+    if (owner === SELF) {
         name += " (You!)";
         messageClass = 'ownMessage';
     }
@@ -97,11 +98,15 @@ function addMessage(user, msg, time, owner){
  * Repopulates the message window with at least 200 of the past messages
  * Does not distinguish if a message was written by the current user
  *
- * @param messages
+ * @param messages  all messages that have been written
+ * @param name
  */
-function populateMessages(messages){
-    for (let i = 0; i < messages.length; i++){
-        addMessage(messages[i]['user'], messages[i]['msg'], messages[i]['time'], OTHER_USER);
+function populateMessages(messages, name){
+    for (let i = 0; i < messages.length; i++) {
+        if (name === messages[i]['user'].name)
+            addMessage(messages[i]['user'], messages[i]['msg'], messages[i]['time'], SELF);
+        else
+            addMessage(messages[i]['user'], messages[i]['msg'], messages[i]['time'], OTHER_USER);
     }
 }
 
@@ -143,23 +148,23 @@ $(function () {
         addMessage(user, msg, time, 'self');
     });
 
-    socket.on('user connected', function(userName, users){
+    socket.on('user connected', function(name, users){
         flushUserList(users);
-        createAlertMessage(userName + " has connected!");
+        createAlertMessage(name + " has connected!");
     });
 
-    socket.on('self connected', function(userName, users, messages){
+    socket.on('self connected', function(name, users, messages){
         flushUserList(users);
 
-       $('span.username').text(userName);
+       $('span.username').text(name);
         if (messages.length > 0)
-            populateMessages(messages);
+            populateMessages(messages, name);
        createAlertMessage("You have connected!");
     });
 
-    socket.on('user disconnected', function(userName, users){
+    socket.on('user disconnected', function(name, users){
         flushUserList(users);
-        createAlertMessage(userName + " has disconnected!");
+        createAlertMessage(name + " has disconnected!");
     });
 
 

@@ -14,7 +14,10 @@ body {
     height: 100%;
     background-color: #fcfcfc;
     color: #fcfcfc;
+
     overflow: hidden;
+
+    min-height: 0;
 }
 
 #top_area {
@@ -199,19 +202,17 @@ form {
     padding-right: 2%;
     width: 85%;
     height: 72%;
-    min-height: 0;
     top: 13%;
 
     display: flex;
     flex-direction: column-reverse;
     -webkit-flex-direction: column-reverse;
     overflow-y: auto;
+  /*  justify-content: space-evenly; */
 }
-#messages li {
-    /*   position: relative; */
 
-    height: 100%;
-    width: 100%;
+
+#messages li {
 
     margin-top: 2%;
     margin-bottom: 2%;
@@ -219,16 +220,20 @@ form {
     padding-top: 0;
     overflow-wrap: normal;
 
-    /*
+
+  /*  align-content: stretch;*/
+
+/*
     display: flex;
-    flex-basis: auto;
-*/
+    flex-basis: auto; */
+
 }
 
 .eventMessage {
     text-align: center;
     font-size: 150%;
     color: black;
+    width: 100%;
 }
 
 .yamMessage {
@@ -252,6 +257,8 @@ form {
     color: #fcfcfc;
 
     max-width: 65%;
+
+    align-self: flex-start;
 }
 
 .ownMessage {
@@ -264,7 +271,8 @@ form {
 
     max-width: 65%;
 
-    margin-left: auto;
+    align-self: flex-end;
+/*    margin-left: auto;*/
 }
 
 

@@ -265,8 +265,6 @@ io.on('connection', function(socket){
                     messageList.shift();
 
                 fakeMessageList.push(new Message(userList[ID], msg, time));
-
-                //messageList.push({'user':userList[ID],'msg':msg,'time':time});
             }
 
         });
