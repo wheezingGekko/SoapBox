@@ -67,7 +67,7 @@ function addMessage(user, msg, time, owner){
         messageClass = 'ownMessage';
     }
     else if (owner === OTHER_USER){
-        messageClass = 'normalMessage';
+        messageClass = '';
     }
     else if (owner === YAMMY){
         messageClass = 'yamMessage';
@@ -89,9 +89,11 @@ function addMessage(user, msg, time, owner){
             .append($('<div>')
                 .text(time)
                 .addClass('timestamp')))
-        .addClass(messageClass));
+        .addClass("messageBody " + messageClass));
 
-    messageBox.scrollTop(messageBox[0].scrollHeight);
+    let messagesBox = $('#messages_wrap');
+
+    messagesBox.scrollTop(messagesBox[0].scrollHeight);
 }
 
 /**
@@ -125,7 +127,8 @@ function createAlertMessage(message){
             .addClass('eventMessage')
     )));
 
-    messageBox.scrollTop(messageBox[0].scrollHeight);
+    let messagesBox = $('#messages_wrap');
+    messagesBox.scrollTop(messagesBox[0].scrollHeight);
 }
 
 $(function () {

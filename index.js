@@ -24,6 +24,7 @@ io.use(cookieParser());
 
 const CHANGE_NICK = "/nick ";
 const CHANGE_COLOR = "/nickcolor ";
+const YAM_NICKNAMES = ["yammy", "yam", "yammy-bot", "yammybot", "yamyam", "yamster", "yammitus", "yamyamyamyam", "yamyamyam"];
 
 const MONTH_NUM_TO_NAME = {
     0: "January",
@@ -241,6 +242,10 @@ io.on('connection', function(socket){
 
                 if (userExists(param)) {
                     let yMsg = "Someone already has that name, sorry!";
+                    socket.emit('yammy message', yMsg);
+                }
+                else if (YAM_NICKNAMES.includes(param.toLowerCase())){
+                    let yMsg = "That's my name...";
                     socket.emit('yammy message', yMsg);
                 }
                 else {
