@@ -249,10 +249,13 @@ io.on('connection', function(socket){
                     socket.emit('yammy message', yMsg);
                 }
                 else {
+
+                    param = sanitize(param);
+
                     io.emit('nick change alert', userList[ID].name + " has changed their name to " + param + "!");
                     socket.broadcast.emit('change nick', userList[ID].name, param);
                     socket.emit('self change nick', userList[ID].name, param);
-                    socket.emit('throw cookies', createCookie(sanitize(param)));
+                    socket.emit('throw cookies', createCookie(param));
 
                     changeUserInFakeMessageList(userList[ID].name, param);
 

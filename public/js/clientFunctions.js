@@ -91,9 +91,7 @@ function addMessage(user, msg, time, owner){
                 .addClass('timestamp')))
         .addClass("messageBody " + messageClass));
 
-    let messagesBox = $('#messages_wrap');
-
-    messagesBox.scrollTop(messagesBox[0].scrollHeight);
+    messageBox.scrollTop(messageBox[0].scrollHeight);
 }
 
 /**
@@ -127,8 +125,7 @@ function createAlertMessage(message){
             .addClass('eventMessage')
     )));
 
-    let messagesBox = $('#messages_wrap');
-    messagesBox.scrollTop(messagesBox[0].scrollHeight);
+    messageBox.scrollTop(messageBox[0].scrollHeight);
 }
 
 $(function () {

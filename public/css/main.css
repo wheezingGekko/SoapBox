@@ -188,29 +188,29 @@ form {
     background-color: #bdd8e8;
 }
 
-#messages_wrap {
-    overflow-y: auto;
+#messages {
+    list-style-type: none;
     margin: 0;
-    padding: 0 2%;
+    padding: 0;
+    padding-left: 20px;
+    padding-right: 20px;
     width: 85%;
     height: 72%;
     top: 13%;
-}
 
-#messages {
-    list-style-type: none;
     display: flex;
     flex-direction: column-reverse;
     -webkit-flex-direction: column-reverse;
-    align-items: center;
+    overflow-y: auto;
 }
 
-
 #messages li {
-    margin-top: 10px;
-    margin-bottom: 5px;
+    margin-top: 2%;
+    margin-bottom: 2%;
     padding: 5px 10px;
+    padding-top: 0;
     overflow-wrap: normal;
+
 }
 
 #messages li .username {
