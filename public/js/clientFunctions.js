@@ -1,4 +1,5 @@
 const OTHER_USER = "otherUser";
+const YAMMY = "yammy";
 
 /**
  *  author: https://stackoverflow.com/questions/6386090/validating-css-color-names
@@ -23,6 +24,11 @@ function validTextColour(stringToTest) {
     return image.style.color !== "rgb(255, 255, 255)";
 }
 
+/**
+ * Adds a user to the user list on the right section of the screen
+ *
+ * @param user
+ */
 function addUser(user){
     $('.users ul').append(
         (($('<li></li>')
@@ -33,11 +39,24 @@ function addUser(user){
                 .addClass('username'))));
 }
 
+/**
+ * Removes a list of users from the right section of the screen
+ *
+ * @param users
+ */
 function flushUserList(users){
     $('.users ul').empty();
     for (let i = 0; i < users.length; i++) addUser(users[i].name);
 }
 
+/**
+ * Adds a message box to the screen
+ *
+ * @param user  - the nickname of the user
+ * @param msg   - the message of the user
+ * @param time  - the time it was written
+ * @param owner - whether or not it was the user themselves or another person
+ */
 function addMessage(user, msg, time, owner){
     let name = user['name'];
     let messageClass = "";
@@ -47,8 +66,10 @@ function addMessage(user, msg, time, owner){
         messageClass = 'ownMessage';
     }
     else if (owner === OTHER_USER){
-        console.log('darn');
         messageClass = 'normalMessage';
+    }
+    else if (owner === YAMMY){
+        messageClass = 'yamMessage';
     }
     else { console.log('oh no'); }
 
@@ -72,13 +93,23 @@ function addMessage(user, msg, time, owner){
     messageBox.scrollTop(messageBox[0].scrollHeight);
 }
 
-
+/**
+ * Repopulates the message window with at least 200 of the past messages
+ * Does not distinguish if a message was written by the current user
+ *
+ * @param messages
+ */
 function populateMessages(messages){
     for (let i = 0; i < messages.length; i++){
         addMessage(messages[i]['user'], messages[i]['msg'], messages[i]['time'], OTHER_USER);
     }
 }
 
+/**
+ * Writes a main message on the screen
+ *
+ * @param message
+ */
 function createAlertMessage(message){
 
     let messageBox = $('#messages');
@@ -140,7 +171,7 @@ $(function () {
         else{
             let msg = "We can't use that color, sorry!";
 
-            addMessage({'name': 'YAMMY-BOT', 'color':'#bdd8e8'}, msg, "", OTHER_USER);
+            addMessage({'name': 'YAMMY-BOT', 'color':'#ffd4dd'}, msg, "", YAMMY);
         }
     });
 
@@ -158,6 +189,6 @@ $(function () {
     });
 
     socket.on('yammy message', function(msg){
-        addMessage({'name': 'YAMMY-BOT', 'color':'#bdd8e8'}, msg, "", OTHER_USER);
+        addMessage({'name': 'YAMMY-BOT', 'color':'#ffd4dd'}, msg, "", YAMMY);
     })
 });

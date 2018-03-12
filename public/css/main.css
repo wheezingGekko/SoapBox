@@ -231,6 +231,17 @@ form {
     color: black;
 }
 
+.yamMessage {
+    -webkit-border-radius: 30px;
+    -moz-border-radius: 30px;
+    border-radius: 30px;
+
+    background-color: #bdd8e8;
+    color: #fcfcfc;
+
+    max-width: 65%;
+}
+
 .normalMessage {
 
     -webkit-border-radius: 30px;

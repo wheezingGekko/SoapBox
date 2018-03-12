@@ -12,18 +12,12 @@ var path = require('path');
 /** SERVER-RELATED **/
 
 app.use(express.static(path.join(__dirname, '/public')));
-
-io.use(cookieParser());
-
-/*
-app.get('/list', function(req, res){
-    res.send(req.cookies);
-});
-*/
-
 app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
+
+io.use(cookieParser());
+
 
 
 /** VAR **/
@@ -32,18 +26,18 @@ const CHANGE_NICK = "/nick ";
 const CHANGE_COLOR = "/nickcolor ";
 
 const MONTH_NUM_TO_NAME = {
-   0: "January",
-   1: "February",
-   2: "March",
-   3: "April",
-   4: "May",
-   5: "June",
-   6: "July",
-   7: "August",
-   8: "September",
-   9: "October",
-   10: "November",
-   11: "December"
+    0: "January",
+    1: "February",
+    2: "March",
+    3: "April",
+    4: "May",
+    5: "June",
+    6: "July",
+    7: "August",
+    8: "September",
+    9: "October",
+    10: "November",
+    11: "December"
 };
 
 const entityMap = {
@@ -140,6 +134,7 @@ function createCookie(chips){
 }
 
 var userList = {};
+var fakeMessageList = [];
 var messageList = [];
 
 /**
@@ -178,60 +173,103 @@ function userExists(name){
 }
 
 
+class Message {
+    constructor(name, msg, time){
+        this.name = name;
+        this.msg = msg;
+        this.time = time;
+    }
+
+    condense(){
+        return {'user':this.name,'msg':this.msg,'time':this.time};
+    }
+}
+
+function transformFakeMessageList(){
+    messageList = [];
+
+    for (let i = 0; i < fakeMessageList.length; i++){
+        messageList.push(fakeMessageList[i].condense());
+    }
+}
+
+function changeUserInFakeMessageList(oldUser, newUser){
+    for (let i = 0; i < fakeMessageList.length; i++){
+        if (fakeMessageList.name === oldUser)
+            fakeMessageList.name = newUser;
+    }
+}
+
 io.on('connection', function(socket){
 
     let ID = "";
 
-    if (socket.request.cookie === undefined){
+    if (socket.request.cookies === undefined){
         ID = createName();
-        userList[ID] = new User(socket.id, ID);
         socket.emit('throw cookies', createCookie(ID));
     }
     else{
-        ID = socket.request.cookie.nick;
+        ID = socket.request.cookies.nick;
     }
 
+    userList[ID] = new User(socket.id, ID);
+
     socket.broadcast.emit('user connected', userList[ID].name, Object.values(userList));
+
+
+    transformFakeMessageList();
     socket.emit('self connected', ID, Object.values(userList), messageList);
+    //socket.emit('self connected', ID, Object.values(userList), messageList);
 
     socket.on('chat message', function(msg){
 
-        let param = sanitize(msg.split(" ")[1]);
+        /** splits the parameters so that the user
+         *  can have nickname with spaces  **/
+        let params = msg.split(" ");
+        params = [params.shift(), params.join(" ")];
+        let param = params[1];
 
         /** Change color of the nickname **/
         if (msg.startsWith(CHANGE_COLOR)){
+            if (param === "default")
+                param = "#bdd8e8";
             io.emit('change color', userList[ID].name, param);
         }
 
-        // change the name of the user if it starts with "/nick "
-        else if (msg.startsWith(CHANGE_NICK)){
+            // change the name of the user if it starts with "/nick "
+            else if (msg.startsWith(CHANGE_NICK)){
 
-            if (userExists(param)) {
-                let yMsg = "Someone already has that name, sorry!";
-                socket.emit('yammy message', yMsg);
+                if (userExists(param)) {
+                    let yMsg = "Someone already has that name, sorry!";
+                    socket.emit('yammy message', yMsg);
+                }
+                else {
+                    io.emit('nick change alert', userList[ID].name + " has changed their name to " + param + "!");
+                    socket.broadcast.emit('change nick', userList[ID].name, param);
+                    socket.emit('self change nick', userList[ID].name, param);
+                    socket.emit('throw cookies', createCookie(sanitize(param)));
+
+                    changeUserInFakeMessageList(userList[ID].name, param);
+
+                    userList[ID].name = param;
+                }
             }
+
+            // otherwise, just have it as a regular message
             else {
-                io.emit('nick change alert', userList[ID].name + " has changed their name to " + param + "!");
-                socket.broadcast.emit('change nick', userList[ID].name, param);
-                socket.emit('self change nick', userList[ID].name, param);
-                socket.emit('throw cookies', createCookie(param));
-                userList[ID].name = param;
+                let time = makeTimeStamp();
+                socket.emit('own chat message', userList[ID], msg, time);
+                socket.broadcast.emit('chat message', userList[ID], msg, time);
+
+                if (messageList.length === 200)
+                    messageList.shift();
+
+                fakeMessageList.push(new Message(userList[ID], msg, time));
+
+                //messageList.push({'user':userList[ID],'msg':msg,'time':time});
             }
-        }
 
-        // otherwise, just have it as a regular message
-        else {
-            let time = makeTimeStamp();
-            socket.emit('own chat message', userList[ID], sanitize(msg), time);
-            socket.broadcast.emit('chat message', userList[ID], sanitize(msg), time);
-
-            if (messageList.length === 200)
-                messageList.shift();
-
-            messageList.push({'user':userList[ID],'msg':sanitize(msg),'time':time});
-        }
-
-    });
+        });
 
     socket.on('successful color', function(name, color){
         userList[name].color = color;
