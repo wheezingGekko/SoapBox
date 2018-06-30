@@ -204,6 +204,7 @@ function changeUserInFakeMessageList(oldUser, newUser){
 io.on('connection', function(socket){
 
     let ID = "";
+    let sID = socket.id;
 
     if (socket.request.cookies === undefined){
         ID = createName();
@@ -213,9 +214,9 @@ io.on('connection', function(socket){
         ID = socket.request.cookies.nick;
     }
 
-    userList[ID] = new User(socket.id, ID);
+    userList[sID] = new User(socket.id, ID);
 
-    socket.broadcast.emit('user connected', userList[ID].name, Object.values(userList));
+    socket.broadcast.emit('user connected', userList[sID].name, Object.values(userList));
 
 
     transformFakeMessageList();
@@ -234,7 +235,7 @@ io.on('connection', function(socket){
         if (msg.startsWith(CHANGE_COLOR)){
             if (param === "default")
                 param = "#bdd8e8";
-            io.emit('change color', userList[ID].name, param);
+            io.emit('change color', userList[sID].name, param);
         }
 
             // change the name of the user if it starts with "/nick "
@@ -252,27 +253,27 @@ io.on('connection', function(socket){
 
                     param = sanitize(param);
 
-                    io.emit('nick change alert', userList[ID].name + " has changed their name to " + param + "!");
-                    socket.broadcast.emit('change nick', userList[ID].name, param);
-                    socket.emit('self change nick', userList[ID].name, param);
+                    io.emit('nick change alert', userList[sID].name + " has changed their name to " + param + "!");
+                    socket.broadcast.emit('change nick', userList[sID].name, param);
+                    socket.emit('self change nick', userList[sID].name, param);
                     socket.emit('throw cookies', createCookie(param));
 
-                    changeUserInFakeMessageList(userList[ID].name, param);
+                    changeUserInFakeMessageList(userList[sID].name, param);
 
-                    userList[ID].name = param;
+                    userList[sID].name = param;
                 }
             }
 
             // otherwise, just have it as a regular message
             else {
                 let time = makeTimeStamp();
-                socket.emit('own chat message', userList[ID], msg, time);
-                socket.broadcast.emit('chat message', userList[ID], msg, time);
+                socket.emit('own chat message', userList[sID], msg, time);
+                socket.broadcast.emit('chat message', userList[sID], msg, time);
 
                 if (messageList.length === 200)
                     messageList.shift();
 
-                fakeMessageList.push(new Message(userList[ID], msg, time));
+                fakeMessageList.push(new Message(userList[sID], msg, time));
             }
 
         });
@@ -282,8 +283,8 @@ io.on('connection', function(socket){
     });
 
     socket.on('disconnect', function(){
-        let disconnectedUser = userList[ID].name;
-        delete userList[ID];
+        let disconnectedUser = userList[sID].name;
+        delete userList[sID];
         io.emit('user disconnected', disconnectedUser, Object.values(userList));
     })
 });
